@@ -1,0 +1,70 @@
+#!/bin/bash
+
+if  [[ "$1" == "" || "$2" == "" || "$3" == ""  ]]
+then
+#     example call: ./shPushNewSWVersionToHub bayramguenes tim_ms_server v0.0.1 DockerfileGoWithGopath
+      echo "Usage shPushNewSWVersionToHub <useRegistryUName> <useImage> <useVersion>  <useDockerfile>?" ;
+      echo " "
+      echo "<useDockerfile>={DockerfileFromScratch,DockerfileFromAlpine,DockerfileGoWithGopath,DockerfileWithGoModule,DockerfileMultiStageWithGoModule,DockerfileWithGoModule}" ;
+      echo " "
+      echo "example call: ./shPushNewSWVersionToHub $dockerId tim_ms_server v0.0.1 "
+
+      exit 0
+fi;
+
+
+#bayramguenes/tim_log_server
+declare useRegistryUName=$1
+export  useRegistryUName
+declare useImage=$2
+export  useImage
+declare useVersion=$3
+export  useVersion
+
+export usedockerfile
+if [[ "$4" != "" ]]
+then 
+  usedockerfile=$4
+else
+#  usedockerfile=DockerfileFromScratch
+  usedockerfile=DockerfileFromAlpine
+# usedockerfile=DockerfileGoWithGopath
+# usedockerfile=DockerfileWithGoModule
+# usedockerfile=DockerfileMultiStageWithGopath
+# usedockerfile=DockerfileMultiStageWithGoModule
+fi  
+declare registryImage=$useRegistryUName"/"$useImage":"$useVersion
+echo "building image="$registryImage
+echo "building deployment-useMedium="$useMedium
+echo "usedockerfile="$usedockerfile
+
+
+#docker rmi -f tim_log_server
+docker rmi -f $useImage
+#docker rmi -f bayramguenes/tim_log_server:$useVersion
+docker rmi -f $registryImage
+
+#docker container rm -f tim_log_server
+
+CGO_ENABLED=0 GOOS=linux go build -o main
+
+
+#build image
+echo "use as Dockerfile style "$usedockerfile
+declare dockerfile=$usedockerfile
+cp ./DockerFileVariants/$dockerfile Dockerfile
+#docker image build --tag tim_log_server:$useVersion .
+docker image build --tag $registryImage .
+
+# clear projectfolder after build
+#rm main
+rm Dockerfile
+docker login
+
+##########################################################
+#DeploySubScripts/subscrPushToDockerHubRegistry
+##########################################################
+declare nameImageLoggerLocl=$useImage #tim_log_server
+declare nameImageDockerHub=$useImage #tim_log_server
+echo "pushing to ="$useRegistryUName/$nameImageDockerHub:$useVersion
+docker image push $useRegistryUName/$nameImageDockerHub:$useVersion 

@@ -1,0 +1,24 @@
+FROM golang:1.14
+
+# Set the Current Working Directory inside the container
+WORKDIR $GOPATH/src/tim_test/tim_infrastructure/tim_serv_provider_guenes
+
+# Copy everything from the current directory to the PWD (Present Working Directory) inside the container
+COPY . .
+
+# Download all the dependencies
+RUN go get -d -v github.com/gin-gonic/gin
+RUN go get -u -v github.com/go-sql-driver/mysql
+
+
+# Install the package
+RUN go install -v github.com/gin-gonic/gin
+RUN go install -v github.com/go-sql-driver/mysql
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o main
+
+# Run the executable
+RUN chmod +x $GOPATH/src/tim_test/tim_infrastructure/tim_serv_logger/main
+
+
+ENTRYPOINT [ "./main" ]

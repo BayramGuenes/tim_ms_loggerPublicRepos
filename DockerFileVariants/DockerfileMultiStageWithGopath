@@ -1,0 +1,55 @@
+#===============================================================
+# builder stage
+#===============================================================
+FROM golang as builder 
+
+# Set the Current Working Directory inside the container
+WORKDIR /go/src/tim_test/tim_infrastructure/tim_serv_logger
+
+# Copy everything from the current directory to the PWD (Present Working Directory) inside the container
+COPY . .
+
+# Download all the dependencies
+RUN go get -d -v github.com/gin-gonic/gin
+RUN go get -u -v github.com/go-sql-driver/mysql
+
+
+# Install the package
+RUN go install -v github.com/gin-gonic/gin
+RUN go install -v github.com/go-sql-driver/mysql
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o main
+
+# Run the executable
+RUN chmod +x /go/src/tim_test/tim_infrastructure/tim_serv_logger/main
+
+#===============================================================
+# develop stage
+#===============================================================
+FROM alpine as develop
+
+RUN apk update && \
+    apk add \
+    bash \
+    curl \
+    wget && \
+  rm -rf  /var/cache/apk/*  
+#EXPOSE 8080
+CMD [ "./main" ]
+
+COPY --from=builder /go/src/tim_test/tim_infrastructure/tim_serv_logger/main /main
+
+
+#===============================================================
+# production stage
+#===============================================================
+FROM alpine as production
+
+RUN apk update && \
+    rm -rf  /var/cache/apk/*  
+EXPOSE 8080
+CMD [ "./main" ]
+
+COPY --from=builder /go/src/tim_test/tim_infrastructure/tim_serv_logger/main /main
+
+

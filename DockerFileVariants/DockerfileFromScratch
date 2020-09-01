@@ -1,0 +1,10 @@
+FROM scratch as builder
+
+
+COPY main /
+COPY timFileSys /timFileSys
+
+ENTRYPOINT [ "./main" ]
+
+
+

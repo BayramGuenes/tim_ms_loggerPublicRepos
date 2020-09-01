@@ -1,0 +1,27 @@
+FROM scratch as builder
+
+
+COPY main /
+COPY timFileSys /timFileSys
+
+#ENTRYPOINT [ "./main" ]
+
+
+
+#===============================================================
+# develop stage
+#===============================================================
+FROM alpine as develop
+
+RUN apk update && \
+    apk add \
+    bash \
+    curl \
+    wget && \
+  rm -rf  /var/cache/apk/*  
+
+EXPOSE 8080
+
+COPY --from=builder / .
+
+CMD ["./main"]

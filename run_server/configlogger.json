@@ -1,0 +1,6 @@
+{
+    "DB_UserPwd":"",
+	"DB_SQLApplschemaName":"timlog",
+    "LocationErrLog":"",
+    "WriteErrToFileSys":false
+}

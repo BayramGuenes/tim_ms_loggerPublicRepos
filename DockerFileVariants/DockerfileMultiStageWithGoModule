@@ -1,0 +1,46 @@
+#https://levelup.gitconnected.com/multi-stage-docker-builds-with-go-modules-df23b7f91a67
+#===============================================================
+# builder stage
+#===============================================================
+FROM golang:1.14 as builder 
+
+COPY . /LoadLocation
+
+WORKDIR /LoadLocation
+
+ENV GO111MODULE=on
+RUN CGO_ENABLED=0 GOOS=linux go build -o LoadLocation
+
+
+#===============================================================
+# develop stage
+#===============================================================
+FROM alpine as develop
+
+RUN apk update && \
+    apk add \
+    bash \
+    curl \
+    wget && \
+  rm -rf  /var/cache/apk/*  
+
+EXPOSE 8080
+
+COPY --from=builder /LoadLocation .
+
+CMD ["./LoadLocation"]
+
+#===============================================================
+# production stage
+#===============================================================
+FROM alpine as production
+
+RUN apk update && \
+    rm -rf  /var/cache/apk/*  
+EXPOSE 8080
+CMD [ "./LoadLocation" ]
+
+COPY --from=builder /LoadLocation .
+
+
+
